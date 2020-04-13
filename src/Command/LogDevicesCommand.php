@@ -124,7 +124,7 @@ class LogDevicesCommand extends Command
                     'room_id' => $room && isset($room['id']) ? $room['id'] : 'None',
                 ],
                 [],
-                $timestamp * 1000000000)
+                (int) ($timestamp * 1000000000))
         ];
         $this->influxDb->writePoints($points);
     }
