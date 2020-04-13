@@ -2,7 +2,7 @@
 <?php
 
 require_once __DIR__ . '/../vendor/autoload.php';
-$config = require_once __DIR__ . '/../config/config.php';
+$config = require_once __DIR__ . '/../../fibaro-config/config.php';
 
 $influxDatabase = getInfluxDatabase($config['influx']);
 $hcClient = getHCClient($config['hc']);
