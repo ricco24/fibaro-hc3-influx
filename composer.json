@@ -1,0 +1,23 @@
+{
+	"name": "kelemen/fibaro-hc3-influx-logs",
+	"description": "Fibaro HC3 changes export to influx database",
+	"license": "MIT",
+	"keywords": ["fibaro","hc3","influx","logs"],
+	"authors": [
+		{
+			"name": "Samuel Kelemen",
+			"email": "kelemen.samuel@gmail.com"
+		}
+	],
+	"require": {
+		"php": ">= 7.3.0"
+	},
+	"require-dev": {
+		"guzzlehttp/guzzle": "^6.2",
+		"influxdb/influxdb-php": "^1.15",
+		"symfony/console": "^5.0"
+	},
+	"autoload": {
+		"classmap": ["src/"]
+	}
+}
