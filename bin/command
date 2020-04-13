@@ -1,0 +1,39 @@
+#!/usr/bin/env php
+<?php
+
+require_once __DIR__ . '/../vendor/autoload.php';
+$config = require_once __DIR__ . '/../config/config.php';
+
+$influxDatabase = getInfluxDatabase($config['influx']);
+$hcClient = getHCClient($config['hc']);
+$lastFile = __DIR__ . $config['lastFile'];
+$logDevicesCommand = new \F3ILog\Command\LogDevicesCommand($influxDatabase, $hcClient, $lastFile);
+
+$app = new \Symfony\Component\Console\Application();
+$app->add($logDevicesCommand);
+$app->run();
+
+function getInfluxDatabase(array $influxConfig)
+{
+    $influx = new \InfluxDB\Client(
+        $influxConfig['host'],
+        $influxConfig['port'],
+        $influxConfig['username'],
+        $influxConfig['password'],
+        $influxConfig['ssl'],
+        $influxConfig['verifySSL'],
+        $influxConfig['timeout'],
+        $influxConfig['connectTimeout']
+    );
+    return $influx->selectDB($influxConfig['database']);
+}
+
+function getHCClient(array $hcConfig)
+{
+    return new F3ILog\HCClient\HCClient(
+            $hcConfig['url'],
+            $hcConfig['username'],
+            $hcConfig['password'],
+            $hcConfig['verifySSL']
+    );
+}
