@@ -70,4 +70,26 @@ class HCClient
     {
         return $this->call(sprintf('%s/api/refreshStates?last=%s', $this->baseUrl, $last));
     }
+
+    public function panelsEvent($type, $last = null, $startFrom = null, $from = null, $to = null)
+    {
+        $query = [
+            'type' => $type
+        ];
+        if ($last !== null) {
+            $query['last'] = $last;
+        }
+        if ($startFrom !== null) {
+            $query['startFrom'] = $startFrom;
+        }
+        if ($from !== null) {
+            $query['from'] = $from;
+        }
+        if ($to !== null) {
+            $query['to'] = $to;
+        }
+
+        $events = $this->call(sprintf('%s/api/panels/event', $this->baseUrl) . '?' . http_build_query($query));
+        return $events === null ? [] : $events;
+    }
 }

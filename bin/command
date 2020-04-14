@@ -6,11 +6,12 @@ $config = require_once __DIR__ . '/../../fibaro-config/config.php';
 
 $influxDatabase = getInfluxDatabase($config['influx']);
 $hcClient = getHCClient($config['hc']);
-$lastFile = __DIR__ . $config['lastFile'];
-$logDevicesCommand = new \F3ILog\Command\LogDevicesCommand($influxDatabase, $hcClient, $lastFile);
+$logDevicesCommand = new \F3ILog\Command\LogDevicesCommand($influxDatabase, $hcClient, __DIR__ . $config['lastFile']['devices']);
+$logEventsCommand = new \F3ILog\Command\LogEventsCommand($influxDatabase, $hcClient, __DIR__ . $config['lastFile']['events']);
 
 $app = new \Symfony\Component\Console\Application();
 $app->add($logDevicesCommand);
+$app->add($logEventsCommand);
 $app->run();
 
 function getInfluxDatabase(array $influxConfig)

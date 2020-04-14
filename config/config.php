@@ -18,5 +18,8 @@ return [
         'password' => '',
         'verifySSL' => false
     ],
-    'lastFile' => '/last'
+    'lastFile' => [
+        'devices' => '/last-devices',
+        'events' => '/last-events'
+    ]
 ];
