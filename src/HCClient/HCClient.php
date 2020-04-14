@@ -66,6 +66,16 @@ class HCClient
         return $result;
     }
 
+    public function sections()
+    {
+        $result = [];
+        $data = $this->call(sprintf('%s/api/sections', $this->baseUrl));
+        foreach ($data as $section) {
+            $result[$section['id']] = $section;
+        }
+        return $result;
+    }
+
     public function refreshStates($last)
     {
         return $this->call(sprintf('%s/api/refreshStates?last=%s', $this->baseUrl, $last));
