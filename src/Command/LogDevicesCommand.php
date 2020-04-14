@@ -75,26 +75,28 @@ class LogDevicesCommand extends Command
                 continue;
             }
             $id = $change['id'];
-            $value = $this->getValue($change);
+            $value = $this->getFieldValue($change['value']);
             $device = $devices[$id];
             $room = $this->getRoomFromDevice($device, $rooms);
-            $this->io->writeln(sprintf('-> saving %s', $device['name']));
-            $this->saveToInflux($id, $value, $device, $room, $timestamp);
+            $this->io->writeln(sprintf('-> saving <info>%s / %.2f</info>', $device['name'], $value));
+            $this->saveToInflux($id, $value, $change, $device, $room, $timestamp);
         }
 
         return 0;
     }
 
-    private function getValue(array $change)
+    private function getFieldValue($value)
     {
-        $value = $change['value'];
         if ($value === "true") {
             return 1;
         }
         if ($value === "false") {
             return 0;
         }
-        return $value;
+        if (is_numeric($value)) {
+            return $value;
+        }
+        return null;
     }
 
     private function getRoomFromDevice($device, $rooms)
@@ -110,22 +112,34 @@ class LogDevicesCommand extends Command
         return $rooms[$device['roomID']];
     }
 
-    private function saveToInflux($id, $value, $device, $room, $timestamp)
+    private function saveToInflux($id, $value, $change, $device, $room, $timestamp)
     {
+        $fields = [];
+        foreach ($change as $k => $v) {
+            if (in_array($k, ['id', 'value', 'log', 'logTemp', 'lastBreached'])) {
+                continue;
+            }
+            $fieldValue = $this->getFieldValue($v);
+            if ($fieldValue === null) {
+                continue;
+            }
+
+            $fields[$k] = $fieldValue;
+        }
+
         $points = [
             new Point(
-                'devices',
+                $device['type'],
                 (float) $value,
                 [
                     'sensor_id' => $id,
                     'sensor_name' => $device['name'],
-                    'sensor_type' => isset($device['type']) ? $device['type'] : '',
                     'room_name' => $room && isset($room['name']) ? $room['name'] : 'None',
                     'room_id' => $room && isset($room['id']) ? $room['id'] : 'None',
                 ],
-                [],
-                (int) ($timestamp * 1000000000))
+                $fields,
+                (int) $timestamp)
         ];
-        $this->influxDb->writePoints($points);
+        $this->influxDb->writePoints($points, Database::PRECISION_SECONDS);
     }
 }
