@@ -18,8 +18,17 @@ return [
         'password' => '',
         'verifySSL' => false
     ],
-    'lastFile' => [
-        'devices' => '/last-devices',
-        'events' => '/last-events'
+    'storage' => [
+        'type' => 'file',
+        'directory' => '../shared/storage'
+    ],
+    'commands' => [
+        'consumption' => [
+            'devices' => [
+                40, // bojler
+                47, // radiator
+                49  // obehovka
+            ]
+        ]
     ]
 ];

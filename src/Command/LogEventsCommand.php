@@ -3,10 +3,12 @@
 namespace F3ILog\Command;
 
 use F3ILog\HCClient\HCClient;
+use F3ILog\Storage\Storage;
 use GuzzleHttp\Client;
 use InfluxDB\Database;
 use InfluxDB\Point;
 use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Helper\ProgressBar;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -19,19 +21,19 @@ class LogEventsCommand extends Command
 
     private $hcClient;
 
-    private $lastFile;
+    private $storage;
 
     private $guzzle;
 
     /** @var SymfonyStyle */
     private $io;
 
-    public function __construct(Database $influxDb, HCClient $hcClient, $lastFile)
+    public function __construct(Database $influxDb, HCClient $hcClient, Storage $storage)
     {
         parent::__construct();
         $this->influxDb = $influxDb;
         $this->hcClient = $hcClient;
-        $this->lastFile = $lastFile;
+        $this->storage = $storage;
         $this->guzzle = new Client();
     }
 
@@ -62,8 +64,8 @@ class LogEventsCommand extends Command
         $maxCalls = (int) $input->getOption('max_calls');
 
         $this->io->section('Configuration');
-        $this->io->writeln("Limit: <comment>$limit</comment>");
-        $this->io->writeln("Max calls: <comment>$maxCalls</comment>");
+        $this->io->writeln(" * limit: <info>$limit</info>");
+        $this->io->writeln(" * max_calls: <info>$maxCalls</info>");
 
         $this->io->section('Data preparation');
 
@@ -73,7 +75,7 @@ class LogEventsCommand extends Command
             $this->io->writeln('<error>error</error>');
             return 1;
         }
-        $this->io->writeln(sprintf('<comment>%d</comment> devices loaded', count($devices)));
+        $this->io->writeln(sprintf('<info>%d</info> devices loaded', count($devices)));
 
         $this->io->write(' * loading rooms (API) ... ');
         $rooms = $this->hcClient->rooms();
@@ -81,7 +83,7 @@ class LogEventsCommand extends Command
             $this->io->writeln('<error>error</error>');
             return 1;
         }
-        $this->io->writeln(sprintf('<comment>%d</comment> rooms loaded', count($rooms)));
+        $this->io->writeln(sprintf('<info>%d</info> rooms loaded', count($rooms)));
 
         $this->io->write(' * loading sections (API) ... ');
         $sections = $this->hcClient->sections();
@@ -89,12 +91,12 @@ class LogEventsCommand extends Command
             $this->io->writeln('<error>error</error>');
             return 1;
         }
-        $this->io->writeln(sprintf('<comment>%d</comment> sections loaded', count($sections)));
+        $this->io->writeln(sprintf('<info>%d</info> sections loaded', count($sections)));
 
         $this->io->write(' * loading last HC3 event ID ... ');
         $lastEvent = $this->hcClient->panelsEvent('id', 1);
         $lastEventId = count($lastEvent) ? $lastEvent[0]['id'] : null;
-        $this->io->writeln($lastEventId ? "<comment>$lastEventId</comment>" : "No events logged in HC3");
+        $this->io->writeln($lastEventId ? "<info>$lastEventId</info>" : "No events logged in HC3");
 
         // No events logged in system
         if ($lastEventId === null) {
@@ -103,9 +105,9 @@ class LogEventsCommand extends Command
         }
 
         $this->io->write(' * loading last saved event ID ... ');
-        $lastSavedEventId = @file_get_contents($this->lastFile);
+        $lastSavedEventId = $this->storage->load('events');
         $this->io->writeln($lastSavedEventId
-            ? sprintf("<comment>$lastSavedEventId</comment> (missing events: <comment>%d</comment>)", $lastEventId - $lastSavedEventId)
+            ? sprintf("<info>$lastSavedEventId</info> (missing events: <info>%d</info>)", $lastEventId - $lastSavedEventId)
             : "No saved events"
         );
 
@@ -116,15 +118,20 @@ class LogEventsCommand extends Command
         $break = false;
         $totalLoaded = 0;
         $totalInserted = 0;
+
+        $progress = new ProgressBar($output);
+        $progress->setFormat(" %message%\n %current%/%max% [%bar%] %percent:3s%% %elapsed:6s%/%estimated:-6s% %memory:6s%");
+        $progress->setMessage(sprintf("Events found/inserted: %d/%d", $totalLoaded, $totalInserted));
+        $progress->start($this->calculateProgressbarSteps($lastEventId, $lastSavedEventId, $limit, $maxCalls));
+
         while ($maxCalls > 0 && !$break) {
             $maxCalls--;
-            $this->io->write(" * loading $limit events startFrom <comment>$startFrom</comment> ... ");
             $events = $this->hcClient->panelsEvent('id', $limit, $startFrom);
             $startFrom += $limit;
             $totalLoaded += count($events);
-            $this->io->write(sprintf("loaded: <comment>%d</comment>", count($events)));
             if (count($events) === 0) {
-                $this->io->newLine();
+                $progress->setMessage(sprintf("Events found/inserted: %d/%d", $totalLoaded, $totalInserted));
+                $progress->advance();
                 continue;
             }
 
@@ -155,18 +162,21 @@ class LogEventsCommand extends Command
             }
 
             $totalInserted += count($points);
-            $this->io->writeln(sprintf(" / inserted: <comment>%d</comment>", count($points)));
+            $progress->setMessage(sprintf("Events found/inserted: %d/%d", $totalLoaded, $totalInserted));
+            $progress->advance();
 
             if ($currentEventId !== null) {
-                file_put_contents($this->lastFile, $currentEventId);
+                $this->storage->store('events', $currentEventId);
             }
         }
+        $progress->finish();
+        $this->io->newLine(2);
 
         $this->io->section('Result');
-        $this->io->writeln(sprintf("Duration: <comment>%.2fs</comment>", microtime(true) - $startTime));
-        $this->io->writeln(sprintf("Total loaded: <comment>%d</comment>", $totalLoaded));
-        $this->io->writeln(sprintf("Total skipped: <comment>%d</comment>", $totalLoaded - $totalInserted));
-        $this->io->writeln(sprintf("Total inserted: <comment>%d</comment>", $totalInserted));
+        $this->io->writeln(sprintf("Duration: <info>%.2fs</info>", microtime(true) - $startTime));
+        $this->io->writeln(sprintf("Total loaded: <info>%d</info>", $totalLoaded));
+        $this->io->writeln(sprintf("Total skipped: <info>%d</info>", $totalLoaded - $totalInserted));
+        $this->io->writeln(sprintf("Total inserted: <info>%d</info>", $totalInserted));
         $this->io->newLine();
 
         return 0;
@@ -241,5 +251,11 @@ class LogEventsCommand extends Command
         }
 
         return $sections[$room['sectionID']];
+    }
+
+    private function calculateProgressbarSteps($lastEventId, $lastSavedEventId, $limit, $maxCalls)
+    {
+        $eventSteps = (int) ($lastEventId - $lastSavedEventId)/$limit;
+        return $eventSteps > $maxCalls ? $maxCalls : $eventSteps;
     }
 }

@@ -102,4 +102,21 @@ class HCClient
         $events = $this->call(sprintf('%s/api/panels/event', $this->baseUrl) . '?' . http_build_query($query));
         return $events === null ? [] : $events;
     }
+
+    public function consumptionEnergy($timestampFrom, $timestampTo, $dataSet, $type, $unit, $id)
+    {
+        return $this->call(sprintf('%s/api/energy/', $this->baseUrl) . "$timestampFrom/$timestampTo/$dataSet/$type/$unit/$id");
+    }
+
+    public function consumptionEnergySummaryGraph($timestampFrom, $timestampTo, $type, $unit, $id)
+    {
+        $logs = $this->consumptionEnergy($timestampFrom, $timestampTo, 'summary-graph', $type, $unit, $id);
+        return $logs === null ? [] : $logs;
+    }
+
+    public function consumptionEnergyCompare($timestampFrom, $timestampTo, $type, $unit, $id)
+    {
+        $result = $this->consumptionEnergy($timestampFrom, $timestampTo, 'compare', $type, $unit, $id);
+        return $result === null ? null : $result[0];
+    }
 }

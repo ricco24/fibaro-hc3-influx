@@ -2,16 +2,21 @@
 <?php
 
 require_once __DIR__ . '/../vendor/autoload.php';
-$config = require_once __DIR__ . '/../../fibaro-config/config.php';
+$config = require_once __DIR__ . '/../../shared/config/config.php';
+
+$storage = new \F3ILog\Storage\NullStorage();
+if ($config['storage']['type'] === 'file') {
+    $storage = new \F3ILog\Storage\FileStorage(__DIR__ . '/../' . $config['storage']['directory']);
+}
 
 $influxDatabase = getInfluxDatabase($config['influx']);
 $hcClient = getHCClient($config['hc']);
-$logDevicesCommand = new \F3ILog\Command\LogDevicesCommand($influxDatabase, $hcClient, __DIR__ . $config['lastFile']['devices']);
-$logEventsCommand = new \F3ILog\Command\LogEventsCommand($influxDatabase, $hcClient, __DIR__ . $config['lastFile']['events']);
+$logEventsCommand = new \F3ILog\Command\LogEventsCommand($influxDatabase, $hcClient, $storage);
+$logConsumptionCommand = new \F3ILog\Command\LogConsumptionCommand($influxDatabase, $hcClient, $storage, $config['commands']['consumption']['devices']);
 
 $app = new \Symfony\Component\Console\Application();
-$app->add($logDevicesCommand);
 $app->add($logEventsCommand);
+$app->add($logConsumptionCommand);
 $app->run();
 
 function getInfluxDatabase(array $influxConfig)
