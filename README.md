@@ -6,6 +6,7 @@ Library provide Symfony multiple commands to export logs from Fibaro HC3 to Infl
 
 #### log:consumption
 Logs consumption and actual power for compatible devices like Fibaro wall plug from **/consumption** API endpoint.
+Data was stored into InfluxDB with **calculated timestamp** \[equation: (timestampTo - timestampFrom)/2]
 
 **Params**
 
@@ -15,7 +16,7 @@ Logs consumption and actual power for compatible devices like Fibaro wall plug f
 
 #### log:events
 Loads events from HC3 **/panels/event** API endpoint and log them into InfluxDB.
-Every event is stored to InfluxDB with timestamp when event was triggered.
+Every event is stored into InfluxDB with **real timestamp** when event was triggered.
 
 **Params**
 
@@ -23,5 +24,9 @@ Every event is stored to InfluxDB with timestamp when event was triggered.
 - *max_calls* - How many maximum times will be events API called (or until last event from HC3 reached)
 
 #### log:refreshStates
+
 #### log:weather
+Simply loads weather data from HC3 **/weather** API endpoint and log them with **current timestamp** into InfluxDB.
+
 #### log:diagnostics
+Loads diagnostics data about HC3 system like - cpu load, memory, storage and store them into InfluxDB with **current timestamp**.

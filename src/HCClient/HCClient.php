@@ -124,4 +124,9 @@ class HCClient
     {
         return $this->call(sprintf('%s/api/weather', $this->baseUrl));
     }
+
+    public function diagnostics()
+    {
+        return $this->call(sprintf('%s/api/diagnostics', $this->baseUrl));
+    }
 }

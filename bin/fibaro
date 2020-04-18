@@ -15,11 +15,13 @@ $hcClient = getHCClient($config['hc']);
 $logEventsCommand = new \F3ILog\Command\LogEventsCommand($influxDatabase, $hcClient, $storage);
 $logConsumptionCommand = new \F3ILog\Command\LogConsumptionCommand($influxDatabase, $hcClient, $storage, $config['commands']['consumption']['devices']);
 $logWeatherCommand = new \F3ILog\Command\LogWeatherCommand($influxDatabase, $hcClient);
+$logDiagnosticsCommand = new \F3ILog\Command\LogDiagnosticsCommand($influxDatabase, $hcClient);
 
 $app = new \Symfony\Component\Console\Application();
 $app->add($logEventsCommand);
 $app->add($logConsumptionCommand);
 $app->add($logWeatherCommand);
+$app->add($logDiagnosticsCommand);
 $app->run();
 
 function getInfluxDatabase(array $influxConfig)
