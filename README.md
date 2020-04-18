@@ -24,6 +24,8 @@ Every event is stored into InfluxDB with **real timestamp** when event was trigg
 - *max_calls* - How many maximum times will be events API called (or until last event from HC3 reached)
 
 #### log:refreshStates
+Loads **/refreshStates** API data from HC3 and process data under changes key and store them into InfluxDB.
+All events are stored with **timestamp from API response**.
 
 #### log:weather
 Simply loads weather data from HC3 **/weather** API endpoint and log them with **current timestamp** into InfluxDB.
