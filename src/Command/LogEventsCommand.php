@@ -199,11 +199,12 @@ class LogEventsCommand extends Command
         $section = $this->getSectionFromRoom($room, $sections);
 
         return new Point(
-            $event['deviceType'],
+            'panels.event. ' . $event['deviceType'],
             null,
             [
                 'device_id' => $event['deviceID'],
                 'device_name' => $device['name'],
+                'device_type' => $event['deviceType'],
                 'room_name' => $room && isset($room['name']) ? $room['name'] : 'None',
                 'room_id' => $room && isset($room['id']) ? $room['id'] : 'None',
                 'section_name' => $section && isset($section['name']) ? $section['name'] : 'None',

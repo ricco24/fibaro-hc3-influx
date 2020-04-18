@@ -12,7 +12,7 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use Exception;
 
-class LogDevicesCommand extends Command
+class LogRefreshStatesCommand extends Command
 {
     private $influxDb;
 
@@ -38,7 +38,7 @@ class LogDevicesCommand extends Command
      */
     protected function configure()
     {
-        $this->setName('log:devices');
+        $this->setName('log:refreshStates');
     }
 
     /**
@@ -75,11 +75,10 @@ class LogDevicesCommand extends Command
                 continue;
             }
             $id = $change['id'];
-            $value = $this->getFieldValue($change['value']);
             $device = $devices[$id];
             $room = $this->getRoomFromDevice($device, $rooms);
-            $this->io->writeln(sprintf('-> saving <info>%s / %.2f</info>', $device['name'], $value));
-            $this->saveToInflux($id, $value, $change, $device, $room, $timestamp);
+            $this->io->writeln(sprintf('-> saving <info>%s</info>', $device['name']));
+            $this->saveToInflux($id, $change, $device, $room, $timestamp);
         }
 
         return 0;
@@ -87,16 +86,13 @@ class LogDevicesCommand extends Command
 
     private function getFieldValue($value)
     {
-        if ($value === "true") {
-            return 1;
+        if ($value === "true" || $value === true) {
+            return 1.0;
         }
-        if ($value === "false") {
-            return 0;
+        if ($value === "false" || $value === false) {
+            return 0.0;
         }
-        if (is_numeric($value)) {
-            return $value;
-        }
-        return null;
+        return $value;
     }
 
     private function getRoomFromDevice($device, $rooms)
@@ -112,25 +108,20 @@ class LogDevicesCommand extends Command
         return $rooms[$device['roomID']];
     }
 
-    private function saveToInflux($id, $value, $change, $device, $room, $timestamp)
+    private function saveToInflux($id, $change, $device, $room, $timestamp)
     {
         $fields = [];
         foreach ($change as $k => $v) {
-            if (in_array($k, ['id', 'value', 'log', 'logTemp', 'lastBreached'])) {
+            if (in_array($k, ['id', 'log', 'logTemp', 'lastBreached'])) {
                 continue;
             }
-            $fieldValue = $this->getFieldValue($v);
-            if ($fieldValue === null) {
-                continue;
-            }
-
-            $fields[$k] = $fieldValue;
+            $fields[$k] = $this->getFieldValue($v);
         }
 
         $points = [
             new Point(
                 $device['type'],
-                (float) $value,
+                null,
                 [
                     'sensor_id' => $id,
                     'sensor_name' => $device['name'],

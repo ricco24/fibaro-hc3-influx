@@ -1,12 +1,13 @@
 #!/usr/bin/env php
 <?php
 
-require_once __DIR__ . '/../vendor/autoload.php';
-$config = require_once __DIR__ . '/../../shared/config/config.php';
+$rootDir = __DIR__ . '/../../../../';
+require_once $rootDir . '/vendor/autoload.php';
+$config = require_once $rootDir . '/config/config.php';
 
 $storage = new \F3ILog\Storage\NullStorage();
 if ($config['storage']['type'] === 'file') {
-    $storage = new \F3ILog\Storage\FileStorage(__DIR__ . '/../' . $config['storage']['directory']);
+    $storage = new \F3ILog\Storage\FileStorage($config['storage']['directory']);
 }
 
 $influxDatabase = getInfluxDatabase($config['influx']);

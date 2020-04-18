@@ -48,7 +48,7 @@ class LogConsumptionCommand extends Command
         $this->setName('log:consumption')
             ->addOption('start_timestamp', null, InputOption::VALUE_REQUIRED, 'First timestamp to use. Default: 1.1.2020', 1577836800)
             ->addOption('span', null, InputOption::VALUE_REQUIRED, 'Seconds span from last timestamp', 60)
-            ->addOption('max_calls', null, InputOption::VALUE_REQUIRED, 'How many maximum times will be events API called (or until last event from HC3 reached)', 3);
+            ->addOption('max_calls', null, InputOption::VALUE_REQUIRED, 'How many maximum times will be consumption API called (or until last event from HC3 reached)', 10);
     }
 
     /**
