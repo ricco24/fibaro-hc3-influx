@@ -119,4 +119,9 @@ class HCClient
         $result = $this->consumptionEnergy($timestampFrom, $timestampTo, 'compare', $type, $unit, $id);
         return $result === null ? null : $result[0];
     }
+
+    public function weather()
+    {
+        return $this->call(sprintf('%s/api/weather', $this->baseUrl));
+    }
 }

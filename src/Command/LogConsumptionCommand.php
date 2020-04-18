@@ -189,7 +189,7 @@ class LogConsumptionCommand extends Command
                 'powerMax' => $data['max'],
                 'powerAvg' => $data['avg']
             ],
-            (int)$timestamp
+            (int) $timestamp
         );
     }
 
