@@ -147,7 +147,7 @@ class LogConsumptionCommand extends Command
                     continue;
                 }
 
-                $influxPoint = $this->createInfluxPoint($data, $devices, $rooms, $sections, (int)($timestampTo + $timestampFrom) / 2);
+                $influxPoint = $this->createInfluxPoint($data, $devices, $rooms, $sections, (int) (($timestampTo + $timestampFrom) / 2));
                 $this->influxDb->writePoints([$influxPoint], Database::PRECISION_SECONDS);
                 $totalPoints++;
                 $progress->advance();
