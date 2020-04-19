@@ -121,16 +121,18 @@ class LogEventsCommand extends Command
 
         $progress = new ProgressBar($output);
         $progress->setFormat(" %message%\n %current%/%max% [%bar%] %percent:3s%% %elapsed:6s%/%estimated:-6s% %memory:6s%");
-        $progress->setMessage(sprintf("Events found/inserted: %d/%d", $totalLoaded, $totalInserted));
+        $progress->setMessage(sprintf("Events found/inserted: %d/%d", $totalLoaded, $totalInserted) . ' start from: ' . $startFrom);
         $progress->start($this->calculateProgressbarSteps($lastEventId, $lastSavedEventId, $limit, $maxCalls));
 
         while ($maxCalls > 0 && !$break) {
             $maxCalls--;
             $events = $this->hcClient->panelsEvent('id', $limit, $startFrom);
+            $currentStartFrom = $startFrom;
             $startFrom += $limit;
             $totalLoaded += count($events);
             if (count($events) === 0) {
-                $progress->setMessage(sprintf("Events found/inserted: %d/%d", $totalLoaded, $totalInserted) . ' start from ' . $startFrom);
+                $this->storage->store('events', $currentStartFrom);
+                $progress->setMessage(sprintf("Events found/inserted: %d/%d", $totalLoaded, $totalInserted));
                 $progress->advance();
                 continue;
             }

@@ -5,6 +5,7 @@
 ### Fixed
 - Timestamp calculation in log:consumption command
 - Measurement name in log:events command
+- Storing last eventID in log:events command even if no events found in response 
 
 ## [1.0.0] - 2020-04-18
 - First tagged version
