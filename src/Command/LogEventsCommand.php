@@ -130,7 +130,7 @@ class LogEventsCommand extends Command
             $startFrom += $limit;
             $totalLoaded += count($events);
             if (count($events) === 0) {
-                $progress->setMessage(sprintf("Events found/inserted: %d/%d", $totalLoaded, $totalInserted));
+                $progress->setMessage(sprintf("Events found/inserted: %d/%d", $totalLoaded, $totalInserted) . ' start from ' . $startFrom);
                 $progress->advance();
                 continue;
             }
@@ -199,7 +199,7 @@ class LogEventsCommand extends Command
         $section = $this->getSectionFromRoom($room, $sections);
 
         return new Point(
-            'panels.event. ' . $event['deviceType'],
+            'panels.event.' . $event['deviceType'],
             null,
             [
                 'device_id' => $event['deviceID'],
