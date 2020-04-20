@@ -258,7 +258,8 @@ class LogEventsCommand extends Command
 
     private function calculateProgressbarSteps($lastEventId, $lastSavedEventId, $limit, $maxCalls)
     {
-        $eventSteps = (int) ($lastEventId - $lastSavedEventId)/$limit;
-        return $eventSteps > $maxCalls ? $maxCalls : $eventSteps;
+        $eventSteps = (int) (($lastEventId - $lastSavedEventId)/$limit);
+        $steps = $eventSteps > $maxCalls ? $maxCalls : $eventSteps;
+        return max(1, $steps);
     }
 }
